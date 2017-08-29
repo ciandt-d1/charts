@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          env:
+          - name: JVMARGS
+            value: "-Xms2g -Xmx2g -enableassertions -enablesystemassertions"
+          - name: TSD_CONF_tsd__network__port
+            value: "{{ .Values.service.internalPort }}"
+          - name: TSD_CONF_tsd__network__bind
+            value: "0.0.0.0"
+          - name: TSD_CONF_google__bigtable__project__id
+            value: "{{ .Values.bigtable.projectId }}"
+          - name: TSD_CONF_google__bigtable__instance__id
+            value: "{{ .Values.bigtable.instanceId }}"
+          - name: TSD_CONF_google__bigtable__zone__id
+            value: "{{ .Values.bigtable.zoneId }}"
+          - name: TSD_CONF_hbase__client__connection__impl
+            value: "{{ .Values.bigtable.connectionImpl }}"
+          - name: TSD_CONF_google__bigtable__grpc__channel__count
+            value: "{{ .Values.bigtable.grpcChannelCount }}"
+          - name: TSD_CONF_tsd__core__auto_create_metrics  
+            value: "true"
+          livenessProbe:
+            httpGet:
+              path: /api/version
+              port: {{ .Values.service.internalPort }}
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/version
+              port: {{ .Values.service.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}

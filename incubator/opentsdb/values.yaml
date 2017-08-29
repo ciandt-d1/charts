@@ -1,0 +1,56 @@
+# Default values for opentsdb.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 4
+
+image:
+  repository: deeone/opentsdb-bigtable
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  name: opentsdb
+  type: LoadBalancer
+  externalPort: 80
+  internalPort: 4242
+
+# http://opentsdb.net/docs/build/html/user_guide/backends/bigtable.html?highlight=bigtable
+bigtable:
+  # google.bigtable.project.id  String  Required  The project ID hosting your Bigtable cluster.  
+  projectId: myproject
+  # google.bigtable.instance.id String  Required  The cluster ID you assigned to your Bigtable cluster at creation. Note that prior to AsyncBigtable 0.3.0 the value was google.bigtable.cluster.name.   
+  instanceId: myinstance
+  # google.bigtable.zone.id String  Required  The zone where your Bigtable cluster is operating; chosen at creation. Note that prior to AsyncBigtable 0.3.0 the value was google.bigtable.zone.name.   
+  zoneId: us-central-1b
+  # hbase.client.connection.impl  String  Required  The class that will be used to implement the HBase API AsyncBigtable will use as a shim between the Bigtable client and OpenTSDB. Set this to com.google.cloud.bigtable.hbase1_2.BigtableConnection (or prior to AsyncBigtable 0.3.0 com.google.cloud.bigtable.hbase1_0.BigtableConnection).   
+  connectionImpl: com.google.cloud.bigtable.hbase1_2.BigtableConnection
+  # google.bigtable.auth.service.account.enable Boolean Required  Whether or not to use a Google cloud service account to connect. Set this to true false
+  # enableServiceAccount: false
+  # # google.bigtable.auth.json.keyfile String  Required  The full path to the JSON formatted key file associated with the service account you want to use for Bigtable access. Download this from your cloud console.   
+  # jsonKeyFile: credentials.json
+  # google.bigtable.grpc.channel.count  Integer Optional  The number of sockets opened to the Bigtable API for handling RPCs. For higher throughput consider increasing the channel count.
+  grpcChannelCount: 4
+
+ingress:
+  enabled: false
+  # Used to create an Ingress record.
+  hosts:
+    - chart-example.local
+  annotations:
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls:
+    # Secrets must be manually created in the namespace.
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+
+resources: 
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+   memory: 3Gi
+  requests:
+   memory: 2Gi
